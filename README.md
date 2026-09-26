@@ -2,11 +2,11 @@
 
 Projeto de automação de testes de API desenvolvido como parte de um desafio técnico de QA Automation.
 
-A solução utiliza **Java + RestAssured + JUnit 5**, com cenários adicionais em **Cucumber**, geração de relatórios com **Allure** e execução automatizada em **Jenkins**.
+A solução utiliza **Java + RestAssured + JUnit 5**, com cenários adicionais em **Cucumber/Gherkin**, autenticação **JWT**, geração de relatórios com **Allure** e execução automatizada em **Jenkins**.
 
 ## Objetivo
 
-Automatizar os principais fluxos da API de gerenciamento de usuários, contemplando cenários positivos, negativos e de validação.
+Automatizar os principais fluxos da API de gerenciamento de usuários, contemplando cenários positivos, negativos, validações de dados, autenticação e operações protegidas.
 
 A API utilizada no projeto é a **ServeRest**:
 
@@ -35,6 +35,7 @@ src
     ├── java
     │   └── br/com/qaautomation/teste
     │       ├── config
+    │       │   ├── ApiLogFilter.java
     │       │   ├── BaseTest.java
     │       │   ├── TestDataFactory.java
     │       │   └── UserData.java
@@ -42,6 +43,7 @@ src
     │       │   └── CucumberTest.java
     │       ├── steps
     │       │   └── UsuarioSteps.java
+    │       ├── JwtAuthenticationTest.java
     │       ├── LoginTest.java
     │       ├── UserCreationTest.java
     │       ├── UserTest.java
@@ -61,7 +63,7 @@ Para executar o projeto localmente é necessário ter instalado:
 * Maven 3.9+
 * Git
 
-O Jenkins é necessário apenas para executar o pipeline de CI.
+O Jenkins é necessário apenas para execução do pipeline de CI.
 
 ## Executando os testes
 
@@ -77,16 +79,30 @@ Acesse o projeto:
 cd api-automation
 ```
 
-Execute os testes:
+Execute a suíte completa:
 
 ```bash
 mvn clean test
 ```
 
-O Maven executará os testes automatizados e disponibilizará os resultados em:
+O Maven executará os testes automatizados e disponibilizará os resultados do Allure em:
 
 ```text
 target/allure-results
+```
+
+### Executando um teste específico
+
+Também é possível executar uma classe específica:
+
+```bash
+mvn test -Dtest=JwtAuthenticationTest
+```
+
+Ou um método específico:
+
+```bash
+mvn test -Dtest=JwtAuthenticationTest#deveUtilizarJwtEmOperacaoProtegida
 ```
 
 ## Relatório Allure
@@ -104,6 +120,40 @@ target/site/allure-maven-plugin
 ```
 
 O projeto também está configurado para publicação automática do relatório no Jenkins.
+
+## Autenticação JWT
+
+O projeto possui um fluxo dedicado para validar autenticação baseada em JWT.
+
+O cenário executa o fluxo completo:
+
+```text
+Criação de usuário administrador
+          ↓
+POST /login
+          ↓
+Obtenção do JWT
+          ↓
+POST /produtos com Authorization
+          ↓
+Consulta do produto criado
+```
+
+O token é utilizado no header:
+
+```text
+Authorization: Bearer <JWT>
+```
+
+O fluxo também valida o uso do token em uma operação protegida da API.
+
+Por segurança, tokens JWT são mascarados nos logs de execução:
+
+```text
+"authorization": "Bearer ***"
+```
+
+O token real continua sendo utilizado internamente pelo teste.
 
 ## Jenkins
 
@@ -175,29 +225,52 @@ O relatório fica disponível diretamente na execução do job no Jenkins.
 
 * Exclusão de usuário existente
 * Exclusão de usuário inexistente
+* Validação do usuário após exclusão
 
-### Cucumber
+### Autenticação JWT e operações protegidas
 
-Os principais fluxos funcionais também possuem cenários escritos em Gherkin, permitindo uma representação mais próxima da linguagem de negócio.
+* Criação de usuário administrador
+* Autenticação via `/login`
+* Validação do recebimento do JWT
+* Utilização do JWT em endpoint protegido
+* Criação de produto autenticado
+* Consulta e validação do produto criado
+
+### Cucumber / BDD
+
+Os principais fluxos funcionais de gerenciamento de usuários também possuem cenários escritos em Gherkin, permitindo uma representação mais próxima da linguagem de negócio.
+
+Os cenários Cucumber complementam os testes implementados diretamente com JUnit 5 e RestAssured.
 
 ## Resultado atual
 
-Na última execução validada no Jenkins:
+A última execução completa validada localmente apresentou:
 
 ```text
-Total de testes: 31
-Passaram:        31
-Falharam:         0
-Erros:            0
+Tests run: 34
+Failures: 0
+Errors: 0
+Skipped: 0
+
+BUILD SUCCESS
 ```
 
 Resultado:
 
 ```text
-31/31 testes aprovados
+34/34 testes aprovados
 ```
 
-O resultado acima representa a execução dos testes automatizados. A cobertura funcional foi estruturada a partir dos principais endpoints e comportamentos previstos no escopo do desafio.
+A suíte contempla os principais endpoints e comportamentos previstos no escopo do desafio, incluindo:
+
+* autenticação;
+* criação;
+* consulta;
+* atualização;
+* exclusão;
+* validações negativas;
+* autenticação JWT;
+* operação protegida.
 
 ## CI/CD
 
@@ -208,7 +281,7 @@ A cada execução do pipeline:
 1. O código é obtido do GitHub.
 2. O ambiente Maven é configurado.
 3. A suíte de testes é executada.
-4. Os resultados são gerados.
+4. Os resultados dos testes são gerados.
 5. O relatório Allure é publicado no Jenkins.
 
 ## Repositório
@@ -221,4 +294,14 @@ Código-fonte:
 
 Os testes utilizam dados dinâmicos para evitar conflitos entre execuções, principalmente durante o cadastro de usuários.
 
-O projeto prioriza a validação dos comportamentos funcionais da API, incluindo respostas HTTP, mensagens retornadas e dados dos usuários.
+O projeto prioriza a validação dos comportamentos funcionais da API, incluindo:
+
+* códigos HTTP;
+* mensagens retornadas;
+* identificadores gerados;
+* dados dos recursos;
+* regras de validação;
+* pós-condições das operações;
+* autenticação e autorização.
+
+Os logs HTTP possuem mascaramento do token JWT para evitar exposição de credenciais durante a execução dos testes.
