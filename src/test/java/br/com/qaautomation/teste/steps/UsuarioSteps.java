@@ -11,10 +11,11 @@ import io.restassured.response.Response;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import br.com.qaautomation.teste.config.ApiConfig;
 
 public class UsuarioSteps {
 
-    private static final String BASE_URL = "https://serverest.dev";
+//    private static final String BASE_URL = "https://serverest.dev";
 
     private UserData usuario;
     private Response response;
@@ -55,7 +56,7 @@ public class UsuarioSteps {
     public void oUsuarioCriadoDeveSerEncontradoPeloId() {
 
         response = given()
-                .baseUri(BASE_URL)
+                .baseUri(ApiConfig.getBaseUrl())
                 .when()
                 .get("/usuarios/{id}", idUsuario);
 
@@ -81,7 +82,7 @@ public class UsuarioSteps {
     public void buscoOUsuarioPeloEmail() {
 
         response = given()
-                .baseUri(BASE_URL)
+                .baseUri(ApiConfig.getBaseUrl())
                 .queryParam("email", usuario.getEmail())
                 .when()
                 .get("/usuarios");
@@ -106,7 +107,7 @@ public class UsuarioSteps {
     public void buscoOUsuarioPeloId() {
 
         response = given()
-                .baseUri(BASE_URL)
+                .baseUri(ApiConfig.getBaseUrl())
                 .when()
                 .get("/usuarios/{id}", idUsuario);
     }
@@ -132,7 +133,7 @@ public class UsuarioSteps {
         );
 
         response = given()
-                .baseUri(BASE_URL)
+                .baseUri(ApiConfig.getBaseUrl())
                 .contentType(ContentType.JSON)
                 .body(body)
                 .when()
@@ -151,7 +152,7 @@ public class UsuarioSteps {
     public void osDadosAtualizadosDevemSerRetornados() {
 
         response = given()
-                .baseUri(BASE_URL)
+                .baseUri(ApiConfig.getBaseUrl())
                 .when()
                 .get("/usuarios/{id}", idUsuario);
 
@@ -175,7 +176,7 @@ public class UsuarioSteps {
         );
 
         response = given()
-                .baseUri(BASE_URL)
+                .baseUri(ApiConfig.getBaseUrl())
                 .contentType(ContentType.JSON)
                 .body(body)
                 .when()
@@ -194,7 +195,7 @@ public class UsuarioSteps {
     public void excluoOUsuario() {
 
         response = given()
-                .baseUri(BASE_URL)
+                .baseUri(ApiConfig.getBaseUrl())
                 .when()
                 .delete("/usuarios/{id}", idUsuario);
     }
@@ -211,7 +212,7 @@ public class UsuarioSteps {
     public void oUsuarioExcluidoNaoDeveSerEncontrado() {
 
         response = given()
-                .baseUri(BASE_URL)
+                .baseUri(ApiConfig.getBaseUrl())
                 .when()
                 .get("/usuarios/{id}", idUsuario);
 
@@ -368,7 +369,7 @@ public class UsuarioSteps {
     private Response cadastrarUsuario(String body) {
 
         return given()
-                .baseUri(BASE_URL)
+                .baseUri(ApiConfig.getBaseUrl())
                 .contentType(ContentType.JSON)
                 .body(body)
                 .when()

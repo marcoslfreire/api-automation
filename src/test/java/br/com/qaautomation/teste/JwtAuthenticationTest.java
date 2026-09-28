@@ -1,10 +1,10 @@
 package br.com.qaautomation.teste;
 
-import br.com.qaautomation.teste.config.ApiLogFilter;
+import br.com.qaautomation.teste.api.AutenticacaoApi;
+import br.com.qaautomation.teste.api.UsuarioApi;
+import br.com.qaautomation.teste.config.AuthRequest;
 import br.com.qaautomation.teste.config.TestDataFactory;
 import br.com.qaautomation.teste.config.UserData;
-import io.restassured.RestAssured;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -14,11 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JwtAuthenticationTest {
 
-    @BeforeAll
-    static void configurar() {
-        RestAssured.baseURI = "https://serverest.dev";
-        RestAssured.filters(new ApiLogFilter());
-    }
+    private final AutenticacaoApi autenticacaoApi = new AutenticacaoApi();
+    private final UsuarioApi usuarioApi = new UsuarioApi();
 
     @Test
     void deveCriarUsuarioAdministrador() {
@@ -30,12 +27,7 @@ public class JwtAuthenticationTest {
         System.out.println("Enviando POST /usuarios...");
         System.out.println("E-mail: " + usuario.getEmail());
 
-        RestAssured
-                .given()
-                .contentType("application/json")
-                .body(usuario)
-                .when()
-                .post("/usuarios")
+        usuarioApi.criarUsuario(usuario)
                 .then()
                 .statusCode(201);
 
@@ -51,12 +43,7 @@ public class JwtAuthenticationTest {
 
         System.out.println("Criando usuário administrador...");
 
-        RestAssured
-                .given()
-                .contentType("application/json")
-                .body(usuario)
-                .when()
-                .post("/usuarios")
+        usuarioApi.criarUsuario(usuario)
                 .then()
                 .statusCode(201);
 
@@ -64,19 +51,7 @@ public class JwtAuthenticationTest {
         System.out.println("Realizando POST /login...");
 
         String token =
-                RestAssured
-                        .given()
-                        .contentType("application/json")
-                        .body("""
-                                {
-                                    "email": "%s",
-                                    "password": "%s"
-                                }
-                                """.formatted(
-                                usuario.getEmail(),
-                                usuario.getPassword()))
-                        .when()
-                        .post("/login")
+                autenticacaoApi.login(usuario)
                         .then()
                         .statusCode(200)
                         .extract()
@@ -103,12 +78,7 @@ public class JwtAuthenticationTest {
 
         System.out.println("[1/4] Criando usuário administrador...");
 
-        RestAssured
-                .given()
-                .contentType("application/json")
-                .body(usuario)
-                .when()
-                .post("/usuarios")
+        usuarioApi.criarUsuario(usuario)
                 .then()
                 .statusCode(201);
 
@@ -122,19 +92,7 @@ public class JwtAuthenticationTest {
         System.out.println("[2/4] Realizando login...");
 
         String token =
-                RestAssured
-                        .given()
-                        .contentType("application/json")
-                        .body("""
-                                {
-                                    "email": "%s",
-                                    "password": "%s"
-                                }
-                                """.formatted(
-                                usuario.getEmail(),
-                                usuario.getPassword()))
-                        .when()
-                        .post("/login")
+                autenticacaoApi.login(usuario)
                         .then()
                         .statusCode(200)
                         .extract()
@@ -156,10 +114,9 @@ public class JwtAuthenticationTest {
         String nomeProduto = "Produto JWT " + System.currentTimeMillis();
 
         String idProduto =
-                RestAssured
-                        .given()
+                AuthRequest
+                        .comToken(token)
                         .contentType("application/json")
-                        .header("Authorization", token)
                         .body("""
                                 {
                                     "nome": "%s",
@@ -192,10 +149,9 @@ public class JwtAuthenticationTest {
         System.out.println();
         System.out.println("[4/4] Consultando produto criado...");
 
-        RestAssured
-                .given()
+        AuthRequest
+                .comToken(token)
                 .contentType("application/json")
-                .header("Authorization", token)
                 .when()
                 .get("/produtos/{id}", idProduto)
                 .then()
