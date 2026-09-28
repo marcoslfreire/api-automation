@@ -4,14 +4,26 @@ import br.com.qaautomation.teste.api.UsuarioApi;
 import br.com.qaautomation.teste.config.BaseTest;
 import br.com.qaautomation.teste.config.TestDataFactory;
 import br.com.qaautomation.teste.config.UserData;
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
+
 import static org.hamcrest.Matchers.*;
 
+@Epic("Usuários")
+@Feature("CRUD de usuários")
 public class UserTest extends BaseTest {
 
     private final UsuarioApi usuarioApi = new UsuarioApi();
 
     @Test
+    @Story("Listar usuários")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Valida que a API permite consultar a lista de usuários e retorna uma resposta válida.")
     void deveListarUsuariosComSucesso() {
 
         usuarioApi.listarUsuarios()
@@ -22,6 +34,9 @@ public class UserTest extends BaseTest {
     }
 
     @Test
+    @Story("Buscar usuário por e-mail")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Valida que a API permite localizar um usuário cadastrado utilizando seu endereço de e-mail.")
     void deveBuscarUsuarioPorEmail() {
 
         UserData usuario = TestDataFactory.criarUsuario();
@@ -38,6 +53,9 @@ public class UserTest extends BaseTest {
     }
 
     @Test
+    @Story("Buscar usuário inexistente")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Valida que a API retorna erro ao tentar consultar um usuário utilizando um identificador inexistente.")
     void deveRetornarErroAoBuscarUsuarioInexistente() {
 
         usuarioApi.buscarUsuarioPorId("ZZZZZZZZZZZZZZZZ")
@@ -46,8 +64,10 @@ public class UserTest extends BaseTest {
                 .body("message", equalTo("Usuário não encontrado"));
     }
 
-
     @Test
+    @Story("Criar usuário ao atualizar ID inexistente")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Valida o comportamento da API ao enviar uma atualização utilizando um identificador de usuário inexistente.")
     void deveCriarUsuarioAoAtualizarIdInexistente() {
 
         String idInexistente = "ZZZZZZZZZZZZZZZZ";
@@ -60,6 +80,9 @@ public class UserTest extends BaseTest {
     }
 
     @Test
+    @Story("Atualizar usuário")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Valida que um usuário cadastrado pode ser atualizado e que os novos dados persistem na consulta posterior.")
     void deveAtualizarUsuarioComSucesso() {
 
         UserData usuario = TestDataFactory.criarUsuario();
@@ -93,6 +116,9 @@ public class UserTest extends BaseTest {
     }
 
     @Test
+    @Story("Excluir usuário")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Valida que um usuário cadastrado pode ser excluído e que a API não o encontra após a exclusão.")
     void deveExcluirUsuarioComSucesso() {
 
         UserData usuario = TestDataFactory.criarUsuario();
@@ -115,6 +141,9 @@ public class UserTest extends BaseTest {
     }
 
     @Test
+    @Story("Excluir usuário inexistente")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Valida que a API informa que nenhum registro foi excluído quando o identificador informado não existe.")
     void deveRetornarNenhumRegistroAoExcluirUsuarioInexistente() {
 
         String idInexistente = "ZZZZZZZZZZZZZZZZ";
