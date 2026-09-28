@@ -61,7 +61,6 @@ class UserCreationTest extends BaseTest {
                 .statusCode(200)
                 .body("nome", equalTo(user.getNome()))
                 .body("email", equalTo(user.getEmail()))
-//                .body("administrador", equalTo(user.getAdministrador()));
-                .body("administrador", equalTo("valor-incorreto"));
+                .body("administrador", equalTo(user.getAdministrador()));
     }
 }
