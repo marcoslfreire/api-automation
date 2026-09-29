@@ -6,7 +6,8 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 import static io.restassured.RestAssured.given;
-//"Eu refatorei a camada de acesso à API, criando uma abstração UsuarioApi para centralizar os endpoints e métodos HTTP. Os testes continuam responsáveis pelas asserções, enquanto a camada de API fica responsável pela comunicação com o serviço."
+//"Eu refatorei a camada de acesso à API, criando uma abstração UsuarioApi para centralizar os endpoints e métodos HTTP.
+// Os testes continuam responsáveis pelas asserções, enquanto a camada de API fica responsável pela comunicação com o serviço."
 public class UsuarioApi {
 
     private final String baseUrl;
