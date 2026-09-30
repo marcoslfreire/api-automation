@@ -1,388 +1,250 @@
 # API Automation
 
-Automação de testes de API desenvolvida como parte de um desafio técnico de QA Automation.
+Automação de testes de API desenvolvida por mim utilizando **Java, Rest Assured, JUnit 5, Cucumber, Allure e Jenkins**, tendo como alvo a API pública **ServeRest**.
 
-O projeto utiliza **Java, Rest Assured, Cucumber/Gherkin, JUnit Platform, Allure e Jenkins** para validar diferentes comportamentos da API [ServeRest](https://serverest.dev/), incluindo cadastro, consulta, atualização, exclusão, validações, autenticação JWT e autorização.
-
----
-
-## Objetivo
-
-Construir uma suíte de automação de testes de API com foco em:
-
-* validação de comportamentos funcionais;
-* cobertura de cenários positivos e negativos;
-* autenticação e autorização;
-* organização dos cenários utilizando BDD;
-* reutilização de componentes de automação;
-* geração de resultados e relatórios;
-* integração com pipeline de CI/CD;
-* rastreabilidade entre comportamento, cenário e automação.
-
-A suíte atual possui **21 cenários automatizados em Cucumber**.
+Meu objetivo neste projeto foi construir uma automação que não ficasse apenas limitada à execução de requisições, mas que também tivesse uma estrutura organizada de testes, rastreabilidade dos cenários, autenticação, geração de evidências e execução em CI.
 
 ---
 
-## Tecnologias utilizadas
+## 📚 Navegação
 
-| Tecnologia     | Utilização                          |
-| -------------- | ----------------------------------- |
-| Java 21        | Linguagem de desenvolvimento        |
-| Maven          | Gerenciamento do projeto e execução |
-| Rest Assured   | Automação e validação das APIs REST |
-| Cucumber       | Especificação dos cenários em BDD   |
-| Gherkin        | Descrição dos comportamentos        |
-| JUnit Platform | Engine de execução dos testes       |
-| Allure Report  | Relatórios de execução              |
-| Jenkins        | Pipeline de CI/CD                   |
-| Git            | Controle de versão                  |
-| GitHub         | Repositório do projeto              |
-| ServeRest      | API utilizada nos testes            |
+* [🎯 Objetivo](#-objetivo)
+* [🛠️ Tecnologias](#️-tecnologias)
+* [🏗️ Arquitetura](#️-arquitetura)
+* [🧪 Cenários automatizados](#-cenários-automatizados)
+* [🥒 BDD com Cucumber](#-bdd-com-cucumber)
+* [🔐 Autenticação e autorização](#-autenticação-e-autorização)
+* [📊 Allure](#-allure)
+* [⚙️ Jenkins](#️-jenkins)
+* [▶️ Executando o projeto](#️-executando-o-projeto)
+* [🔎 Comportamentos investigados](#-comportamentos-investigados)
+* [🧠 Decisões técnicas](#-decisões-técnicas)
+* [📁 Estrutura do projeto](#-estrutura-do-projeto)
+* [✅ Resultado final](#-resultado-final)
 
 ---
 
-## Arquitetura
+# 🎯 Objetivo
 
-A automação foi organizada separando a especificação dos cenários da implementação técnica das chamadas HTTP.
+Desenvolvi este projeto como uma solução de **QA Automation para testes de API**.
+
+Durante a construção, meu foco foi trabalhar não somente a automação dos endpoints, mas também aspectos que considero importantes em um projeto real de qualidade:
+
+* organização dos testes;
+* reutilização de código;
+* isolamento dos cenários;
+* validação de respostas;
+* autenticação;
+* autorização;
+* documentação dos comportamentos;
+* geração de evidências;
+* execução automatizada;
+* integração contínua.
+
+A API utilizada foi a **ServeRest**:
+
+`https://serverest.dev`
+
+---
+
+# 🛠️ Tecnologias
+
+Para desenvolver a automação utilizei:
+
+| Tecnologia   | Utilização                 |
+| ------------ | -------------------------- |
+| Java 21      | Linguagem principal        |
+| Maven        | Gerenciamento e execução   |
+| Rest Assured | Automação de API           |
+| JUnit 5      | Plataforma de execução     |
+| Cucumber     | BDD                        |
+| Gherkin      | Especificação dos cenários |
+| Allure       | Relatórios                 |
+| Jenkins      | CI                         |
+| Git          | Controle de versão         |
+| GitHub       | Repositório                |
+
+---
+
+# 🏗️ Arquitetura
+
+Organizei a automação separando a especificação dos comportamentos da implementação técnica.
+
+O fluxo principal ficou:
 
 ```text
 Feature
    ↓
-Step Definitions
+Steps
    ↓
-ScenarioContext / Test Data
+ScenarioContext / Utils
    ↓
 API Client
    ↓
-ServeRest API
+ServeRest
 ```
 
-### Responsabilidade das camadas
+As **Features** descrevem o comportamento esperado.
 
-**Feature**
+Os **Steps** implementam as ações e validações.
 
-Contém os cenários escritos em Gherkin, representando o comportamento que deve ser validado.
-
-**Step Definitions**
-
-Implementam os passos definidos nos arquivos `.feature`.
-
-**ScenarioContext**
-
-Mantém os dados compartilhados durante a execução de um cenário, como:
+O **ScenarioContext** permite compartilhar informações durante um cenário, como:
 
 * usuário;
 * ID;
 * token;
-* resposta;
-* dados de atualização;
-* request body.
+* email;
+* senha;
+* request;
+* response.
 
-**API Client**
+O **API Client** concentra as chamadas HTTP para a API.
 
-Centraliza as chamadas HTTP para os endpoints da API.
-
-Exemplo:
-
-```text
-UsuarioApi
-```
-
-**ServeRest**
-
-API utilizada como sistema sob teste.
+Com essa separação, evitei colocar toda a implementação diretamente dentro dos steps.
 
 ---
 
-## Estrutura do projeto
+# 🧪 Cenários automatizados
 
-```text
-api-automation/
-│
-├── Jenkinsfile
-├── README.md
-├── pom.xml
-│
-└── src/
-    └── test/
-        ├── java/
-        │   └── br/
-        │       └── com/
-        │           └── qaautomation/
-        │               └── teste/
-        │                   ├── api/
-        │                   │   └── UsuarioApi.java
-        │                   │
-        │                   ├── config/
-        │                   │   ├── ApiConfig.java
-        │                   │   ├── AuthRequest.java
-        │                   │   ├── BaseTest.java
-        │                   │   ├── TestDataFactory.java
-        │                   │   └── UserData.java
-        │                   │
-        │                   ├── context/
-        │                   │   └── ScenarioContext.java
-        │                   │
-        │                   ├── legacy/
-        │                   │   ├── JwtAuthenticationTest.java
-        │                   │   ├── LoginTest.java
-        │                   │   ├── UserCreationTest.java
-        │                   │   ├── UserTest.java
-        │                   │   └── UserValidationTest.java
-        │                   │
-        │                   ├── runners/
-        │                   │   └── CucumberTest.java
-        │                   │
-        │                   └── steps/
-        │                       ├── AutenticacaoSteps.java
-        │                       └── UsuarioSteps.java
-        │
-        └── resources/
-            └── features/
-                ├── autenticacao/
-                │   ├── CT-015-login-sucesso.feature
-                │   ├── CT-016-login-senha-invalida.feature
-                │   ├── CT-017-jwt-valido.feature
-                │   ├── CT-018-jwt-ausente.feature
-                │   ├── CT-019-jwt-invalido.feature
-                │   └── CT-020-usuario-sem-permissao.feature
-                │
-                └── usuarios/
-                    ├── CT-001-criar-usuario.feature
-                    ├── CT-002-buscar-usuario-email.feature
-                    ├── CT-003-buscar-usuario-inexistente.feature
-                    ├── CT-004-atualizar-usuario.feature
-                    ├── CT-005-atualizar-id-inexistente.feature
-                    ├── CT-006-excluir-usuario.feature
-                    ├── CT-007-excluir-usuario-inexistente.feature
-                    ├── CT-008-email-invalido.feature
-                    ├── CT-009-email-duplicado.feature
-                    ├── CT-010-sem-nome.feature
-                    ├── CT-011-sem-email.feature
-                    ├── CT-012-sem-password.feature
-                    ├── CT-013-sem-administrador.feature
-                    ├── CT-014-administrador-invalido.feature
-                    └── CT-021-listar-usuarios.feature
-```
-
----
-
-## Cenários automatizados
-
-A suíte possui 21 cenários funcionais.
+Na versão atual da automação implementei **21 cenários Cucumber**.
 
 ### Usuários
 
-| ID     | Cenário                                     |
-| ------ | ------------------------------------------- |
-| CT-001 | Criar usuário com dados válidos             |
-| CT-002 | Buscar usuário por e-mail                   |
-| CT-003 | Buscar usuário inexistente                  |
-| CT-004 | Atualizar usuário existente                 |
-| CT-005 | Atualizar utilizando ID inexistente         |
-| CT-006 | Excluir usuário existente                   |
-| CT-007 | Excluir usuário inexistente                 |
-| CT-008 | Impedir cadastro com e-mail inválido        |
-| CT-009 | Impedir cadastro com e-mail duplicado       |
-| CT-010 | Impedir cadastro sem nome                   |
-| CT-011 | Impedir cadastro sem e-mail                 |
-| CT-012 | Impedir cadastro sem password               |
-| CT-013 | Impedir cadastro sem administrador          |
-| CT-014 | Impedir cadastro com administrador inválido |
-| CT-021 | Listar usuários cadastrados                 |
+| ID     | Cenário                             |
+| ------ | ----------------------------------- |
+| CT-001 | Criar usuário com dados válidos     |
+| CT-002 | Buscar usuário por email            |
+| CT-003 | Buscar usuário inexistente          |
+| CT-004 | Atualizar usuário existente         |
+| CT-005 | Atualizar utilizando ID inexistente |
+| CT-006 | Excluir usuário existente           |
+| CT-007 | Excluir usuário inexistente         |
+
+### Validações
+
+| ID     | Cenário                     |
+| ------ | --------------------------- |
+| CT-008 | Email inválido              |
+| CT-009 | Email duplicado             |
+| CT-010 | Nome não informado          |
+| CT-011 | Email não informado         |
+| CT-012 | Password não informado      |
+| CT-013 | Administrador não informado |
+| CT-014 | Administrador inválido      |
 
 ### Autenticação e autorização
 
-| ID     | Cenário                                                         |
-| ------ | --------------------------------------------------------------- |
-| CT-015 | Realizar login com credenciais válidas                          |
-| CT-016 | Rejeitar login com senha inválida                               |
-| CT-017 | Permitir operação protegida com JWT válido                      |
-| CT-018 | Rejeitar operação protegida sem JWT                             |
-| CT-019 | Rejeitar operação protegida com JWT inválido                    |
-| CT-020 | Rejeitar operação administrativa para usuário não administrador |
+| ID     | Cenário                                |
+| ------ | -------------------------------------- |
+| CT-015 | Login com sucesso                      |
+| CT-016 | Login com senha inválida               |
+| CT-017 | Operação protegida com JWT válido      |
+| CT-018 | Operação protegida sem JWT             |
+| CT-019 | Operação protegida com JWT inválido    |
+| CT-020 | Usuário sem permissão de administrador |
+
+### Listagem
+
+| ID     | Cenário         |
+| ------ | --------------- |
+| CT-021 | Listar usuários |
 
 ---
 
-## Estratégia de testes
+# 🥒 BDD com Cucumber
 
-Os cenários foram organizados de forma que cada execução tenha sua própria preparação de dados.
+Na evolução para a V3, utilizei o **Cucumber** para representar os comportamentos da API através de Gherkin.
 
-A automação evita depender de dados fixos previamente existentes na API sempre que o cenário exige um usuário específico.
-
-Por exemplo, um cenário que precisa de um usuário cadastrado cria sua própria massa antes da execução.
-
-Isso reduz a dependência entre cenários e facilita a execução isolada.
-
----
-
-## BDD com Cucumber
-
-O Cucumber é utilizado como camada de especificação funcional.
-
-Exemplo:
+Por exemplo:
 
 ```gherkin
 Scenario: Criar usuário com dados válidos
-  Given que possuo os dados válidos de um novo usuário
-  When realizo o cadastro do usuário
-  Then o usuário deve ser criado com sucesso
-  And o identificador do usuário deve ser retornado
-  And os dados do usuário criado devem ser persistidos
+    Given que possuo os dados válidos de um novo usuário
+    When realizo o cadastro do usuário
+    Then o usuário deve ser criado com sucesso
 ```
 
-A intenção é manter o cenário orientado ao comportamento esperado, evitando colocar detalhes de implementação HTTP diretamente no Gherkin.
+Minha intenção foi manter o Gherkin focado no **comportamento**, evitando colocar detalhes técnicos de HTTP diretamente na especificação.
+
+A execução do Cucumber é realizada através do **JUnit Platform**.
+
+Dessa forma, o JUnit funciona como mecanismo de execução e o Cucumber fica responsável pela camada BDD.
 
 ---
 
-## JUnit Platform
+# 🔐 Autenticação e autorização
 
-O projeto utiliza o **JUnit Platform** como mecanismo de execução do Cucumber.
+Também implementei cenários específicos para validar autenticação e autorização utilizando JWT.
 
-O runner principal é:
+O fluxo utilizado foi:
 
 ```text
-CucumberTest.java
+Criar usuário administrador
+        ↓
+Realizar login
+        ↓
+Receber JWT
+        ↓
+Enviar JWT no Authorization
+        ↓
+Executar operação protegida
 ```
 
-O runner seleciona os recursos Cucumber e configura o pacote responsável pelos Step Definitions.
+Validei:
 
-Os testes funcionais atuais são executados pela engine do Cucumber.
+* login com credenciais válidas;
+* login com senha inválida;
+* JWT válido;
+* ausência de JWT;
+* JWT inválido;
+* usuário autenticado sem permissão de administrador.
+
+Para validar a autorização utilizei uma operação protegida da própria API.
+
+O objetivo foi testar a segurança da API sem criar uma suíte adicional de testes de produtos.
 
 ---
 
-## Testes legados
+# 📊 Allure
 
-Durante a evolução do projeto, existiam testes funcionais implementados diretamente com JUnit.
+Utilizei o **Allure** para gerar os resultados da execução dos testes.
 
-Esses testes foram preservados em:
-
-```text
-src/test/java/br/com/qaautomation/teste/legacy/
-```
-
-Eles permanecem no projeto como referência histórica e técnica da evolução da automação.
-
-A execução principal da V3 utiliza os cenários Cucumber.
-
-Os testes legados não são executados pelo fluxo principal do Maven, evitando duplicidade de execução dos mesmos comportamentos.
-
----
-
-## Configuração do ambiente
-
-### Pré-requisitos
-
-Instalar:
-
-* Java 21;
-* Maven;
-* Git.
-
-Verificar as versões:
-
-```bash
-java -version
-mvn -version
-git --version
-```
-
----
-
-## Clonar o projeto
-
-```bash
-git clone https://github.com/marcoslfreire/api-automation.git
-```
-
-Entrar no projeto:
-
-```bash
-cd api-automation
-```
-
----
-
-## Configuração da URL da API
-
-A URL padrão utilizada pelo projeto é:
-
-```text
-https://serverest.dev
-```
-
-A configuração está centralizada em:
-
-```text
-ApiConfig.java
-```
-
-O projeto também permite sobrescrever a URL através da propriedade:
-
-```text
-baseUrl
-```
-
-Exemplo:
-
-```bash
-mvn clean test -DbaseUrl=https://serverest.dev
-```
-
-Quando nenhuma propriedade é informada, o projeto utiliza a URL padrão.
-
----
-
-## Executar os testes
-
-Para executar a suíte completa:
+Depois da execução:
 
 ```bash
 mvn clean test
 ```
 
-A execução atual possui:
-
-```text
-Tests run: 21
-Failures: 0
-Errors: 0
-Skipped: 0
-BUILD SUCCESS
-```
-
----
-
-## Relatórios Allure
-
-Durante a execução são gerados resultados do Allure em:
+os resultados são gerados em:
 
 ```text
 target/allure-results
 ```
 
-Esses arquivos contêm os dados utilizados para geração do relatório.
+Na validação local encontrei **21 arquivos de resultado**, correspondentes aos 21 cenários automatizados.
 
-Para gerar/visualizar o relatório localmente, utilizando a instalação do Allure CLI:
-
-```bash
-allure serve target/allure-results
-```
-
-O relatório permite analisar os resultados dos cenários executados e seus respectivos detalhes.
+Também confirmei que cenários Cucumber estavam sendo registrados corretamente nos resultados do Allure.
 
 ---
 
-## Integração com Jenkins
+# ⚙️ Jenkins
 
-O projeto possui um `Jenkinsfile` na raiz do repositório.
+Também integrei o projeto ao Jenkins para validar a execução em um ambiente de CI.
 
-Pipeline atual:
+O pipeline está definido no:
 
 ```text
+Jenkinsfile
+```
+
+O fluxo principal é:
+
+```text
+GitHub
+   ↓
 Jenkins
    ↓
-Maven
+Jenkinsfile
    ↓
 mvn clean test
    ↓
@@ -390,213 +252,281 @@ Cucumber
    ↓
 21 cenários
    ↓
-Surefire
+Surefire + Allure Results
    ↓
-Allure Results
-   ↓
-Relatórios
+Allure Report
 ```
 
-O pipeline utiliza as ferramentas configuradas no Jenkins para:
+O Jenkins também publica os resultados do JUnit e o relatório do Allure.
 
-* executar os testes;
-* publicar os resultados JUnit/Surefire;
-* disponibilizar os resultados do Allure.
-
-O `Jenkinsfile` também possui configuração para executar as etapas de publicação no bloco `post`, permitindo que os resultados sejam processados após a execução da suíte.
-
----
-
-## Autenticação e autorização
-
-A API utiliza autenticação baseada em JWT.
-
-Os testes validam diferentes situações:
-
-### Login válido
-
-Verifica:
-
-* credenciais válidas;
-* status HTTP `200`;
-* retorno do token JWT.
-
-### Login inválido
-
-Verifica a rejeição de credenciais inválidas.
-
-### JWT válido
-
-Verifica o acesso a uma operação protegida utilizando um token válido.
-
-### JWT ausente
-
-Verifica a rejeição de uma operação protegida quando o token não é enviado.
-
-### JWT inválido
-
-Verifica a rejeição de um token inválido.
-
-### Usuário sem permissão administrativa
-
-Verifica a restrição de uma operação administrativa para um usuário autenticado sem perfil de administrador.
-
----
-
-## Validações de dados
-
-A suíte também cobre regras de validação do cadastro de usuários.
-
-Entre elas:
-
-* e-mail inválido;
-* e-mail duplicado;
-* nome obrigatório;
-* e-mail obrigatório;
-* password obrigatório;
-* administrador obrigatório;
-* administrador limitado aos valores esperados pela API.
-
-Os testes validam tanto o status HTTP quanto as mensagens retornadas pela API quando aplicável.
-
----
-
-## Observação sobre atualização de usuário
-
-A API ServeRest possui um comportamento específico para `PUT /usuarios/{id}`.
-
-Quando o ID informado não existe, a API pode realizar o cadastro de um novo usuário.
-
-Esse comportamento é validado especificamente pelo cenário:
+Durante a validação real do pipeline, confirmei a geração do relatório:
 
 ```text
-CT-005
+Allure report was successfully generated.
 ```
 
-O cenário foi mantido separado do fluxo de atualização de um usuário existente para representar os dois comportamentos observados na API.
+e o arquivamento do relatório:
+
+```text
+Allure artifact archived via ArtifactManager.
+```
+
+A execução finalizou com:
+
+```text
+Finished: SUCCESS
+```
+
+---
+
+# ▶️ Executando o projeto
+
+## Pré-requisitos
+
+Antes de executar o projeto, preciso ter instalado:
+
+* Java 21;
+* Maven;
+* Git.
+
+Depois de clonar o projeto:
+
+```bash
+git clone https://github.com/marcoslfreire/api-automation.git
+```
+
+Acesso o diretório:
+
+```bash
+cd api-automation
+```
+
+E executo os testes com:
+
+```bash
+mvn clean test
+```
+
+---
+
+## URL da API
+
+A URL padrão utilizada pela automação é:
+
+```text
+https://serverest.dev
+```
+
+Também deixei a URL configurável através da propriedade:
+
+```text
+baseUrl
+```
+
+Por padrão, a aplicação utiliza:
+
+```java
+https://serverest.dev
+```
+
+Isso permite alterar o ambiente sem precisar modificar as classes da automação.
+
+---
+
+# 🔎 Comportamentos investigados
+
+Durante a implementação, além de automatizar os cenários principais, também investiguei alguns comportamentos específicos da API.
+
+## PUT com ID inexistente
+
+Identifiquei que:
+
+```text
+PUT /usuarios/{id}
+```
+
+pode realizar o cadastro de um novo usuário quando o ID informado não existe.
+
+Por isso criei o cenário:
+
+```text
+CT-005 — Atualizar utilizando ID inexistente
+```
+
+Mantive esse comportamento documentado porque ele faz parte do comportamento observado da API.
 
 ---
 
 ## Rate Limit
 
-Durante a exploração da API foi realizada uma validação do comportamento de limite de requisições.
+Também investiguei o comportamento de rate limit.
 
-Foram executadas requisições sequenciais para verificar se a API retornaria um status de rate limit, como `429`, ou headers relacionados ao controle de requisições.
+Realizei **110 requisições GET sequenciais** para verificar como a API se comportava.
 
-Na execução realizada, as requisições não apresentaram resposta `429` nem headers específicos de rate limit.
+Durante a exploração observei:
 
-Por esse motivo, o rate limit não foi transformado em um cenário automatizado da suíte atual.
+* respostas HTTP 200;
+* nenhuma resposta HTTP 429;
+* nenhum header específico de rate limit identificado;
+* nenhum mecanismo de retry observado.
 
-A validação permanece como uma investigação exploratória realizada durante o desenvolvimento do projeto.
+Como não consegui reproduzir o comportamento de limitação durante a execução, não transformei essa investigação em um teste funcional automatizado definitivo.
+
+Mantive o resultado documentado para uma eventual investigação futura.
 
 ---
 
-## Decisões técnicas
+# 🧠 Decisões técnicas
+
+Durante a evolução do projeto tomei algumas decisões importantes.
 
 ### Cucumber como camada funcional
 
-A V3 utiliza Cucumber para representar os comportamentos funcionais da API.
+Utilizei o Cucumber para representar os comportamentos funcionais da API.
 
-Isso permite separar:
+### JUnit Platform como executor
 
-```text
-Especificação
-    ↓
-Implementação
-```
+Utilizei o JUnit Platform para executar os cenários Cucumber, evitando manter duas suítes funcionais duplicadas.
 
-Os arquivos `.feature` representam o comportamento esperado, enquanto os Step Definitions implementam a execução.
+### Testes antigos preservados
 
-### JUnit como engine de execução
-
-O JUnit Platform é utilizado como infraestrutura de execução do Cucumber.
-
-A intenção não é manter uma duplicação de testes funcionais entre JUnit e Cucumber.
-
-### Separação dos API Clients
-
-As chamadas HTTP são centralizadas em classes específicas, como:
+Os testes JUnit que existiam antes da evolução para Cucumber foram mantidos em:
 
 ```text
-UsuarioApi
+src/test/java/br/com/qaautomation/teste/legacy
 ```
 
-Isso evita espalhar detalhes de comunicação HTTP pelos Step Definitions.
+Eles servem como referência da implementação anterior, mas não fazem parte da execução funcional principal.
+
+### Cenários independentes
+
+Cada cenário prepara seus próprios dados quando necessário.
+
+Evitei criar dependências entre cenários para que eles possam ser executados individualmente ou dentro do pipeline.
+
+### API Client
+
+Centralizei as chamadas HTTP em classes específicas, evitando duplicação de código nos steps.
 
 ### ScenarioContext
 
-O `ScenarioContext` permite compartilhar dados entre os passos de um mesmo cenário sem utilizar estado global.
+Utilizei um contexto para compartilhar informações durante a execução de um cenário.
 
-### Dados independentes
+### Autenticação
 
-Sempre que necessário, os cenários criam seus próprios dados para reduzir dependências entre execuções.
-
----
-
-## Resultado atual
-
-Última execução validada:
-
-```text
-Tests run: 21
-Failures: 0
-Errors: 0
-Skipped: 0
-
-BUILD SUCCESS
-```
-
-Todos os 21 cenários funcionais da suíte Cucumber foram executados com sucesso.
+Utilizei JWT e uma operação protegida para validar autenticação e autorização.
 
 ---
 
-## Fluxo completo da solução
+# 📁 Estrutura do projeto
+
+A estrutura principal ficou:
 
 ```text
-                  GitHub
-                     │
-                     ▼
-                  Jenkins
-                     │
-                     ▼
-               Maven / Surefire
-                     │
-                     ▼
-                Cucumber
-                     │
-             ┌───────┴───────┐
-             ▼               ▼
-        Usuários        Autenticação
-             │               │
-             └───────┬───────┘
-                     ▼
-                Rest Assured
-                     │
-                     ▼
-                 ServeRest
-                     │
-             ┌───────┴────────┐
-             ▼                ▼
-          Surefire       Allure Results
-                              │
-                              ▼
-                         Allure Report
+api-automation/
+│
+├── src/
+│   └── test/
+│       ├── java/
+│       │   └── br/com/qaautomation/teste/
+│       │       ├── api/
+│       │       ├── config/
+│       │       ├── context/
+│       │       ├── legacy/
+│       │       ├── runners/
+│       │       └── steps/
+│       │
+│       └── resources/
+│           └── features/
+│               ├── autenticacao/
+│               └── usuarios/
+│
+├── docs/
+│   └── arquitetura-e-pipeline-v3.md
+│
+├── Jenkinsfile
+├── pom.xml
+└── README.md
 ```
 
 ---
 
-## Repositório
+# 🔄 Fluxo completo
 
-GitHub:
+De forma resumida, o fluxo que construí foi:
 
-https://github.com/marcoslfreire/api-automation
+```text
+Feature Gherkin
+      ↓
+Step Definitions
+      ↓
+ScenarioContext / Utils
+      ↓
+API Client
+      ↓
+Rest Assured
+      ↓
+ServeRest
+      ↓
+Validações
+      ↓
+Allure Results
+      ↓
+Jenkins
+      ↓
+Allure Report
+```
 
 ---
 
-## Autor
+# ✅ Resultado final
+
+Ao finalizar essa versão, consegui construir uma automação com:
+
+* **21 cenários automatizados**;
+* Java 21;
+* Rest Assured;
+* JUnit Platform;
+* Cucumber;
+* Gherkin;
+* autenticação JWT;
+* validação de autorização;
+* isolamento dos cenários;
+* Allure;
+* Jenkins;
+* GitHub;
+* documentação técnica.
+
+A execução local foi validada com:
+
+```bash
+mvn clean test
+```
+
+E também validei a execução completa no Jenkins, incluindo a geração e publicação do relatório Allure.
+
+---
+
+# 👨‍💻 Autor
 
 **Marcos Luciano Freire**
 
 QA Automation / Software Engineer
 
-GitHub: https://github.com/marcoslfreire
+GitHub:
+
+https://github.com/marcoslfreire
+
+LinkedIn:
+
+https://linkedin.com/in/marcosffreire
+
+---
+
+## 📚 Documentação complementar
+
+Para entender com mais detalhes as decisões e a evolução da automação, consulte:
+
+[Arquitetura e Pipeline V3](docs/arquitetura-e-pipeline-v3.md)
+
+[⬆️ Voltar ao menu](#-navegação)
