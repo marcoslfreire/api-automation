@@ -1,378 +1,521 @@
 package br.com.qaautomation.teste.steps;
 
+import br.com.qaautomation.teste.api.UsuarioApi;
 import br.com.qaautomation.teste.config.TestDataFactory;
 import br.com.qaautomation.teste.config.UserData;
+import br.com.qaautomation.teste.context.ScenarioContext;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import static io.restassured.RestAssured.given;
+
+
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class UsuarioSteps {
 
-    private static final String BASE_URL = "https://serverest.dev";
+    private final ScenarioContext context;
+    private final UsuarioApi usuarioApi;
 
-    private UserData usuario;
-    private Response response;
-    private String idUsuario;
-    private String body;
+    public UsuarioSteps(ScenarioContext context) {
+        this.context = context;
+        this.usuarioApi = new UsuarioApi();
+    }
 
-    @Given("que possuo os dados de um novo usuário")
-    public void quePossuoOsDadosDeUmNovoUsuario() {
+    @Given("que possuo os dados válidos de um novo usuário")
+    public void quePossuoOsDadosValidosDeUmNovoUsuario() {
+        UserData usuario = TestDataFactory.criarUsuario();
+        context.setUsuario(usuario);
+    }
 
-        usuario = TestDataFactory.criarUsuario();
+    @Given("que possuo um usuário cadastrado")
+    public void quePossuoUmUsuarioCadastrado() {
+        UserData usuario = TestDataFactory.criarUsuario();
 
-        body = criarBodyUsuario(
-                usuario.getNome(),
-                usuario.getEmail(),
-                usuario.getPassword(),
-                usuario.getAdministrador()
+        context.setUsuario(usuario);
+
+        context.setResponse(
+                usuarioApi.criarUsuario(usuario)
+        );
+
+        context.setUsuarioId(
+                context.getResponse()
+                        .jsonPath()
+                        .getString("_id")
         );
     }
 
     @When("realizo o cadastro do usuário")
     public void realizoOCadastroDoUsuario() {
 
-        response = cadastrarUsuario(body);
+        if (context.getRequestBody() != null) {
+            context.setResponse(
+                    usuarioApi.criarUsuario(
+                            context.getRequestBody()
+                    )
+            );
+            return;
+        }
+
+        context.setResponse(
+                usuarioApi.criarUsuario(
+                        context.getUsuario()
+                )
+        );
     }
 
     @Then("o usuário deve ser criado com sucesso")
     public void oUsuarioDeveSerCriadoComSucesso() {
-
-        response.then()
+        context.getResponse()
+                .then()
                 .statusCode(201)
-                .body("message", equalTo("Cadastro realizado com sucesso"))
-                .body("_id", notNullValue());
-
-        idUsuario = response.path("_id");
+                .body(
+                        "message",
+                        equalTo("Cadastro realizado com sucesso")
+                )
+                .body(
+                        "_id",
+                        notNullValue()
+                );
     }
 
-    @And("o usuário criado deve ser encontrado pelo id")
-    public void oUsuarioCriadoDeveSerEncontradoPeloId() {
+    @Then("o identificador do usuário deve ser retornado")
+    public void oIdentificadorDoUsuarioDeveSerRetornado() {
 
-        response = given()
-                .baseUri(BASE_URL)
-                .when()
-                .get("/usuarios/{id}", idUsuario);
+        String usuarioId =
+                context.getResponse()
+                        .jsonPath()
+                        .getString("_id");
 
-        response.then()
-                .statusCode(200)
-                .body("nome", equalTo(usuario.getNome()))
-                .body("email", equalTo(usuario.getEmail()))
-                .body("administrador", equalTo(usuario.getAdministrador()));
-    }
+        assertNotNull(usuarioId);
+        assertFalse(usuarioId.isBlank());
 
-    @And("o usuário foi cadastrado")
-    public void oUsuarioFoiCadastrado() {
-
-        response = cadastrarUsuario(body);
-
-        response.then()
-                .statusCode(201);
-
-        idUsuario = response.path("_id");
+        context.setUsuarioId(usuarioId);
     }
 
     @When("busco o usuário pelo email")
     public void buscoOUsuarioPeloEmail() {
-
-        response = given()
-                .baseUri(BASE_URL)
-                .queryParam("email", usuario.getEmail())
-                .when()
-                .get("/usuarios");
+        context.setResponse(
+                usuarioApi.buscarUsuarioPorEmail(
+                        context.getUsuario().getEmail()
+                )
+        );
     }
 
     @Then("o usuário deve ser encontrado")
     public void oUsuarioDeveSerEncontrado() {
-
-        response.then()
+        context.getResponse()
+                .then()
                 .statusCode(200)
-                .body("quantidade", equalTo(1))
-                .body("usuarios[0].email", equalTo(usuario.getEmail()));
+                .body(
+                        "quantidade",
+                        equalTo(1)
+                )
+                .body(
+                        "usuarios[0].email",
+                        equalTo(
+                                context.getUsuario().getEmail()
+                        )
+                );
     }
 
-    @Given("que possuo um id de usuário inexistente")
+    @Given("que existem usuários cadastrados")
+    public void queExistemUsuariosCadastrados() {
+        UserData usuario = TestDataFactory.criarUsuario();
+
+        context.setUsuario(usuario);
+
+        context.setResponse(
+                usuarioApi.criarUsuario(usuario)
+        );
+
+        context.getResponse()
+                .then()
+                .statusCode(201);
+    }
+
+    @When("consulto a lista de usuários")
+    public void consultoAListaDeUsuarios() {
+        context.setResponse(
+                usuarioApi.listarUsuarios()
+        );
+    }
+
+    @Then("a lista de usuários deve ser retornada com sucesso")
+    public void aListaDeUsuariosDeveSerRetornadaComSucesso() {
+        context.getResponse()
+                .then()
+                .statusCode(200)
+                .body("quantidade", greaterThanOrEqualTo(0))
+                .body("usuarios", notNullValue());
+    }
+
+    @Given("que possuo um ID de usuário inexistente")
     public void quePossuoUmIdDeUsuarioInexistente() {
-
-        idUsuario = "ZZZZZZZZZZZZZZZZ";
+        context.setUsuarioId(
+                "ZZZZZZZZZZZZZZZZ"
+        );
     }
 
-    @When("busco o usuário pelo id")
+    @When("busco o usuário pelo ID")
     public void buscoOUsuarioPeloId() {
-
-        response = given()
-                .baseUri(BASE_URL)
-                .when()
-                .get("/usuarios/{id}", idUsuario);
+        context.setResponse(
+                usuarioApi.buscarUsuarioPorId(
+                        context.getUsuarioId()
+                )
+        );
     }
 
-    @Then("a API deve informar que o usuário não foi encontrado")
-    public void aApiDeveInformarQueOUsuarioNaoFoiEncontrado() {
-
-        response.then()
+    @Then("o usuário não deve ser encontrado")
+    public void oUsuarioNaoDeveSerEncontrado() {
+        context.getResponse()
+                .then()
                 .statusCode(400)
-                .body("message", equalTo("Usuário não encontrado"));
+                .body(
+                        "message",
+                        equalTo("Usuário não encontrado")
+                );
     }
 
     @When("atualizo os dados do usuário")
     public void atualizoOsDadosDoUsuario() {
 
-        String novoNome = "QA Automation Atualizado";
+        UserData usuarioAtualizado =
+                new UserData(
+                        "QA Automation Atualizado",
+                        context.getUsuario().getEmail(),
+                        context.getUsuario().getPassword(),
+                        "false"
+                );
 
-        body = criarBodyUsuario(
-                novoNome,
-                usuario.getEmail(),
-                usuario.getPassword(),
-                "false"
+        context.setUsuarioAtualizado(usuarioAtualizado);
+
+        context.setResponse(
+                usuarioApi.atualizarUsuario(
+                        context.getUsuarioId(),
+                        usuarioAtualizado
+                )
         );
-
-        response = given()
-                .baseUri(BASE_URL)
-                .contentType(ContentType.JSON)
-                .body(body)
-                .when()
-                .put("/usuarios/{id}", idUsuario);
     }
 
     @Then("o usuário deve ser atualizado com sucesso")
     public void oUsuarioDeveSerAtualizadoComSucesso() {
-
-        response.then()
+        context.getResponse()
+                .then()
                 .statusCode(200)
-                .body("message", equalTo("Registro alterado com sucesso"));
+                .body(
+                        "message",
+                        equalTo("Registro alterado com sucesso")
+                );
     }
 
     @And("os dados atualizados devem ser retornados")
     public void osDadosAtualizadosDevemSerRetornados() {
 
-        response = given()
-                .baseUri(BASE_URL)
-                .when()
-                .get("/usuarios/{id}", idUsuario);
+        Response responseConsulta =
+                usuarioApi.buscarUsuarioPorId(
+                        context.getUsuarioId()
+                );
 
-        response.then()
+        responseConsulta
+                .then()
                 .statusCode(200)
-                .body("nome", equalTo("QA Automation Atualizado"))
-                .body("email", equalTo(usuario.getEmail()))
-                .body("administrador", equalTo("false"));
+                .body(
+                        "nome",
+                        equalTo("QA Automation Atualizado")
+                )
+                .body(
+                        "email",
+                        equalTo(
+                                context.getUsuario().getEmail()
+                        )
+                )
+                .body(
+                        "administrador",
+                        equalTo("false")
+                );
     }
 
-    @When("atualizo um usuário com esse id")
-    public void atualizoUmUsuarioComEsseId() {
+    @When("atualizo um usuário utilizando esse ID")
+    public void atualizoUmUsuarioUtilizandoEsseId() {
 
-        String email = "qa-put-" + System.currentTimeMillis() + "@teste.com";
+        String email =
+                "qa-put-"
+                        + System.currentTimeMillis()
+                        + "@teste.com";
 
-        body = criarBodyUsuario(
-                "QA Automation",
-                email,
-                "123456",
-                "true"
+        UserData usuario =
+                new UserData(
+                        "QA Automation",
+                        email,
+                        "123456",
+                        "true"
+                );
+
+        context.setUsuarioAtualizado(usuario);
+
+        context.setResponse(
+                usuarioApi.atualizarUsuario(
+                        context.getUsuarioId(),
+                        usuario
+                )
         );
-
-        response = given()
-                .baseUri(BASE_URL)
-                .contentType(ContentType.JSON)
-                .body(body)
-                .when()
-                .put("/usuarios/{id}", idUsuario);
     }
 
     @Then("um novo usuário deve ser criado")
     public void umNovoUsuarioDeveSerCriado() {
-
-        response.then()
+        context.getResponse()
+                .then()
                 .statusCode(201)
-                .body("message", equalTo("Cadastro realizado com sucesso"));
+                .body(
+                        "message",
+                        equalTo("Cadastro realizado com sucesso")
+                )
+                .body(
+                        "_id",
+                        notNullValue()
+                );
     }
 
     @When("excluo o usuário")
     public void excluoOUsuario() {
-
-        response = given()
-                .baseUri(BASE_URL)
-                .when()
-                .delete("/usuarios/{id}", idUsuario);
+        context.setResponse(
+                usuarioApi.excluirUsuario(
+                        context.getUsuarioId()
+                )
+        );
     }
 
     @Then("o usuário deve ser excluído com sucesso")
     public void oUsuarioDeveSerExcluidoComSucesso() {
-
-        response.then()
+        context.getResponse()
+                .then()
                 .statusCode(200)
-                .body("message", equalTo("Registro excluído com sucesso"));
+                .body(
+                        "message",
+                        equalTo("Registro excluído com sucesso")
+                );
     }
 
     @And("o usuário excluído não deve ser encontrado")
     public void oUsuarioExcluidoNaoDeveSerEncontrado() {
 
-        response = given()
-                .baseUri(BASE_URL)
-                .when()
-                .get("/usuarios/{id}", idUsuario);
+        Response responseConsulta =
+                usuarioApi.buscarUsuarioPorId(
+                        context.getUsuarioId()
+                );
 
-        response.then()
+        responseConsulta
+                .then()
                 .statusCode(400)
-                .body("message", equalTo("Usuário não encontrado"));
+                .body(
+                        "message",
+                        equalTo("Usuário não encontrado")
+                );
     }
 
     @Then("nenhum registro deve ser excluído")
     public void nenhumRegistroDeveSerExcluido() {
-
-        response.then()
+        context.getResponse()
+                .then()
                 .statusCode(200)
-                .body("message", equalTo("Nenhum registro excluído"));
+                .body(
+                        "message",
+                        equalTo("Nenhum registro excluído")
+                );
     }
 
     @Given("que possuo dados de usuário com email inválido")
     public void quePossuoDadosDeUsuarioComEmailInvalido() {
 
-        body = criarBodyUsuario(
-                "QA Automation",
-                "email-invalido",
-                "123456",
-                "true"
+        context.setRequestBody(
+                criarBodyUsuario(
+                        "QA Automation",
+                        "email-invalido",
+                        "123456",
+                        "true"
+                )
         );
     }
 
     @Given("que possuo dados de usuário sem nome")
     public void quePossuoDadosDeUsuarioSemNome() {
 
-        body = """
+        context.setRequestBody("""
                 {
                     "email": "qa-%s@teste.com",
                     "password": "123456",
                     "administrador": "true"
                 }
-                """.formatted(System.currentTimeMillis());
+                """.formatted(
+                System.currentTimeMillis()
+        ));
     }
 
     @Given("que possuo dados de usuário sem email")
     public void quePossuoDadosDeUsuarioSemEmail() {
 
-        body = """
+        context.setRequestBody("""
                 {
                     "nome": "QA Automation",
                     "password": "123456",
                     "administrador": "true"
                 }
-                """;
+                """);
     }
 
     @Given("que possuo dados de usuário sem password")
     public void quePossuoDadosDeUsuarioSemPassword() {
 
-        body = """
+        context.setRequestBody("""
                 {
                     "nome": "QA Automation",
                     "email": "qa-%s@teste.com",
                     "administrador": "true"
                 }
-                """.formatted(System.currentTimeMillis());
+                """.formatted(
+                System.currentTimeMillis()
+        ));
     }
 
     @Given("que possuo dados de usuário sem administrador")
     public void quePossuoDadosDeUsuarioSemAdministrador() {
 
-        body = """
+        context.setRequestBody("""
                 {
                     "nome": "QA Automation",
                     "email": "qa-%s@teste.com",
                     "password": "123456"
                 }
-                """.formatted(System.currentTimeMillis());
+                """.formatted(
+                System.currentTimeMillis()
+        ));
     }
 
     @Given("que possuo dados de usuário com administrador inválido")
     public void quePossuoDadosDeUsuarioComAdministradorInvalido() {
 
-        body = """
+        context.setRequestBody("""
                 {
                     "nome": "QA Automation",
                     "email": "qa-%s@teste.com",
                     "password": "123456",
                     "administrador": "valor-invalido"
                 }
-                """.formatted(System.currentTimeMillis());
+                """.formatted(
+                System.currentTimeMillis()
+        ));
     }
 
     @When("tento cadastrar novamente o mesmo usuário")
     public void tentoCadastrarNovamenteOMesmoUsuario() {
 
-        response = cadastrarUsuario(body);
+        context.setResponse(
+                usuarioApi.criarUsuario(
+                        context.getUsuario()
+                )
+        );
     }
 
     @Then("o cadastro deve ser rejeitado")
     public void oCadastroDeveSerRejeitado() {
-
-        response.then()
+        context.getResponse()
+                .then()
                 .statusCode(400);
+    }
+
+    @Then("os dados do usuário criado devem ser persistidos")
+    public void osDadosDoUsuarioCriadoDevemSerPersistidos() {
+        context.setResponse(
+                usuarioApi.buscarUsuarioPorId(
+                        context.getUsuarioId()
+                )
+        );
+
+        context.getResponse()
+                .then()
+                .statusCode(200)
+                .body("nome", equalTo(context.getUsuario().getNome()))
+                .body("email", equalTo(context.getUsuario().getEmail()))
+                .body("administrador", equalTo(context.getUsuario().getAdministrador()));
     }
 
     @And("a API deve informar que o email é inválido")
     public void aApiDeveInformarQueOEmailEInvalido() {
-
-        response.then()
-                .body("email", equalTo("email deve ser um email válido"));
+        context.getResponse()
+                .then()
+                .body(
+                        "email",
+                        equalTo("email deve ser um email válido")
+                );
     }
 
     @And("a API deve informar que o email já está sendo usado")
     public void aApiDeveInformarQueOEmailJaEstaSendoUsado() {
-
-        response.then()
-                .body("message", equalTo("Este email já está sendo usado"));
+        context.getResponse()
+                .then()
+                .body(
+                        "message",
+                        equalTo("Este email já está sendo usado")
+                );
     }
 
     @And("a API deve informar que o nome é obrigatório")
     public void aApiDeveInformarQueONomeEObrigatorio() {
-
-        response.then()
-                .body("nome", equalTo("nome é obrigatório"));
+        context.getResponse()
+                .then()
+                .body(
+                        "nome",
+                        equalTo("nome é obrigatório")
+                );
     }
 
     @And("a API deve informar que o email é obrigatório")
     public void aApiDeveInformarQueOEmailEObrigatorio() {
-
-        response.then()
-                .body("email", equalTo("email é obrigatório"));
+        context.getResponse()
+                .then()
+                .body(
+                        "email",
+                        equalTo("email é obrigatório")
+                );
     }
 
     @And("a API deve informar que o password é obrigatório")
     public void aApiDeveInformarQueOPasswordEObrigatorio() {
-
-        response.then()
-                .body("password", equalTo("password é obrigatório"));
+        context.getResponse()
+                .then()
+                .body(
+                        "password",
+                        equalTo("password é obrigatório")
+                );
     }
 
     @And("a API deve informar que o administrador é obrigatório")
     public void aApiDeveInformarQueOAdministradorEObrigatorio() {
-
-        response.then()
-                .body("administrador", equalTo("administrador é obrigatório"));
-    }
-
-    @And("a API deve informar que o administrador é inválido")
-    public void aApiDeveInformarQueOAdministradorEInvalido() {
-
-        response.then()
+        context.getResponse()
+                .then()
                 .body(
                         "administrador",
-                        equalTo("administrador deve ser 'true' ou 'false'")
+                        equalTo("administrador é obrigatório")
                 );
     }
 
-    private Response cadastrarUsuario(String body) {
-
-        return given()
-                .baseUri(BASE_URL)
-                .contentType(ContentType.JSON)
-                .body(body)
-                .when()
-                .post("/usuarios");
+    @And("a API deve informar que o administrador deve ser true ou false")
+    public void aApiDeveInformarQueOAdministradorEInvalido() {
+        context.getResponse()
+                .then()
+                .body(
+                        "administrador",
+                        equalTo(
+                                "administrador deve ser 'true' ou 'false'"
+                        )
+                );
     }
 
     private String criarBodyUsuario(
@@ -381,7 +524,6 @@ public class UsuarioSteps {
             String password,
             String administrador
     ) {
-
         return """
                 {
                     "nome": "%s",
