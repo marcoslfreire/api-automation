@@ -47,6 +47,16 @@ public class UsuarioApi {
                 .post("/usuarios");
     }
 
+    public Response criarUsuario(String requestBody) {
+        return given()
+                .baseUri(baseUrl)
+                .contentType(ContentType.JSON)
+                .body(requestBody)
+                .when()
+                .post("/usuarios");
+    }
+
+
     public Response atualizarUsuario(String id, UserData usuario) {
         return given()
                 .baseUri(baseUrl)

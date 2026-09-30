@@ -1,55 +1,96 @@
 # API Automation
 
-Projeto de automação de testes de API desenvolvido como parte de um desafio técnico de QA Automation.
+Automação de testes de API desenvolvida como parte de um desafio técnico de QA Automation.
 
-A solução utiliza **Java 21, Rest Assured, JUnit 5, Cucumber/Gherkin, Allure Report e Jenkins**, com foco na validação dos principais fluxos da API de gerenciamento de usuários, incluindo cenários positivos, negativos, validações, autenticação e operações protegidas.
-
-A API utilizada no projeto é a **ServeRest**.
-
-**API:** https://serverest.dev
+O projeto utiliza **Java, Rest Assured, Cucumber/Gherkin, JUnit Platform, Allure e Jenkins** para validar diferentes comportamentos da API [ServeRest](https://serverest.dev/), incluindo cadastro, consulta, atualização, exclusão, validações, autenticação JWT e autorização.
 
 ---
 
 ## Objetivo
 
-Automatizar e validar os principais comportamentos da API de gerenciamento de usuários, contemplando:
+Construir uma suíte de automação de testes de API com foco em:
 
-* criação de usuários;
-* consulta de usuários;
-* atualização de usuários;
-* exclusão de usuários;
-* validações de dados;
-* autenticação por login;
-* autenticação baseada em JWT;
-* utilização de JWT em operação protegida;
-* cenários positivos e negativos.
+* validação de comportamentos funcionais;
+* cobertura de cenários positivos e negativos;
+* autenticação e autorização;
+* organização dos cenários utilizando BDD;
+* reutilização de componentes de automação;
+* geração de resultados e relatórios;
+* integração com pipeline de CI/CD;
+* rastreabilidade entre comportamento, cenário e automação.
 
-O projeto também possui cenários BDD implementados com **Cucumber/Gherkin**, além dos testes implementados diretamente com **JUnit 5 e Rest Assured**.
+A suíte atual possui **21 cenários automatizados em Cucumber**.
 
 ---
 
-## Tecnologias
+## Tecnologias utilizadas
 
-* **Java 21**
-* **Maven**
-* **JUnit 5**
-* **Rest Assured**
-* **Cucumber / Gherkin**
-* **Allure Report**
-* **Jenkins**
-* **Git / GitHub**
+| Tecnologia     | Utilização                          |
+| -------------- | ----------------------------------- |
+| Java 21        | Linguagem de desenvolvimento        |
+| Maven          | Gerenciamento do projeto e execução |
+| Rest Assured   | Automação e validação das APIs REST |
+| Cucumber       | Especificação dos cenários em BDD   |
+| Gherkin        | Descrição dos comportamentos        |
+| JUnit Platform | Engine de execução dos testes       |
+| Allure Report  | Relatórios de execução              |
+| Jenkins        | Pipeline de CI/CD                   |
+| Git            | Controle de versão                  |
+| GitHub         | Repositório do projeto              |
+| ServeRest      | API utilizada nos testes            |
 
-### Principais versões utilizadas
+---
 
-| Tecnologia     | Versão |
-| -------------- | ------ |
-| Java           | 21     |
-| JUnit Jupiter  | 5.13.4 |
-| Rest Assured   | 6.0.1  |
-| Cucumber       | 7.28.2 |
-| Allure Java    | 2.35.3 |
-| Allure Maven   | 2.17.0 |
-| JUnit Platform | 1.13.4 |
+## Arquitetura
+
+A automação foi organizada separando a especificação dos cenários da implementação técnica das chamadas HTTP.
+
+```text
+Feature
+   ↓
+Step Definitions
+   ↓
+ScenarioContext / Test Data
+   ↓
+API Client
+   ↓
+ServeRest API
+```
+
+### Responsabilidade das camadas
+
+**Feature**
+
+Contém os cenários escritos em Gherkin, representando o comportamento que deve ser validado.
+
+**Step Definitions**
+
+Implementam os passos definidos nos arquivos `.feature`.
+
+**ScenarioContext**
+
+Mantém os dados compartilhados durante a execução de um cenário, como:
+
+* usuário;
+* ID;
+* token;
+* resposta;
+* dados de atualização;
+* request body.
+
+**API Client**
+
+Centraliza as chamadas HTTP para os endpoints da API.
+
+Exemplo:
+
+```text
+UsuarioApi
+```
+
+**ServeRest**
+
+API utilizada como sistema sob teste.
 
 ---
 
@@ -57,405 +98,447 @@ O projeto também possui cenários BDD implementados com **Cucumber/Gherkin**, a
 
 ```text
 api-automation/
-├── pom.xml
+│
 ├── Jenkinsfile
 ├── README.md
-├── .gitignore
-│
-├── .allure/
-│   └── allure-2.36.0/
-│
-├── allure-results/
+├── pom.xml
 │
 └── src/
-    ├── main/
-    │   └── java/
-    │       └── br/com/qaautomation/
-    │           └── Main.java
-    │
     └── test/
         ├── java/
-        │   └── br/com/qaautomation/teste/
-        │       ├── JwtAuthenticationTest.java
-        │       ├── LoginTest.java
-        │       ├── UserCreationTest.java
-        │       ├── UserTest.java
-        │       ├── UserValidationTest.java
-        │       │
-        │       ├── config/
-        │       │   ├── ApiLogFilter.java
-        │       │   ├── BaseTest.java
-        │       │   ├── TestDataFactory.java
-        │       │   └── UserData.java
-        │       │
-        │       ├── runners/
-        │       │   └── CucumberTest.java
-        │       │
-        │       └── steps/
-        │           ├── Hooks.java
-        │           └── UsuarioSteps.java
+        │   └── br/
+        │       └── com/
+        │           └── qaautomation/
+        │               └── teste/
+        │                   ├── api/
+        │                   │   └── UsuarioApi.java
+        │                   │
+        │                   ├── config/
+        │                   │   ├── ApiConfig.java
+        │                   │   ├── AuthRequest.java
+        │                   │   ├── BaseTest.java
+        │                   │   ├── TestDataFactory.java
+        │                   │   └── UserData.java
+        │                   │
+        │                   ├── context/
+        │                   │   └── ScenarioContext.java
+        │                   │
+        │                   ├── legacy/
+        │                   │   ├── JwtAuthenticationTest.java
+        │                   │   ├── LoginTest.java
+        │                   │   ├── UserCreationTest.java
+        │                   │   ├── UserTest.java
+        │                   │   └── UserValidationTest.java
+        │                   │
+        │                   ├── runners/
+        │                   │   └── CucumberTest.java
+        │                   │
+        │                   └── steps/
+        │                       ├── AutenticacaoSteps.java
+        │                       └── UsuarioSteps.java
         │
         └── resources/
-            ├── allure.properties
-            ├── cucumber.properties
             └── features/
-                └── usuarios.feature
+                ├── autenticacao/
+                │   ├── CT-015-login-sucesso.feature
+                │   ├── CT-016-login-senha-invalida.feature
+                │   ├── CT-017-jwt-valido.feature
+                │   ├── CT-018-jwt-ausente.feature
+                │   ├── CT-019-jwt-invalido.feature
+                │   └── CT-020-usuario-sem-permissao.feature
+                │
+                └── usuarios/
+                    ├── CT-001-criar-usuario.feature
+                    ├── CT-002-buscar-usuario-email.feature
+                    ├── CT-003-buscar-usuario-inexistente.feature
+                    ├── CT-004-atualizar-usuario.feature
+                    ├── CT-005-atualizar-id-inexistente.feature
+                    ├── CT-006-excluir-usuario.feature
+                    ├── CT-007-excluir-usuario-inexistente.feature
+                    ├── CT-008-email-invalido.feature
+                    ├── CT-009-email-duplicado.feature
+                    ├── CT-010-sem-nome.feature
+                    ├── CT-011-sem-email.feature
+                    ├── CT-012-sem-password.feature
+                    ├── CT-013-sem-administrador.feature
+                    ├── CT-014-administrador-invalido.feature
+                    └── CT-021-listar-usuarios.feature
 ```
-
----
-
-## Organização dos testes
-
-Os testes estão organizados por responsabilidade.
-
-### `config`
-
-Contém componentes reutilizáveis utilizados pelos testes:
-
-* `BaseTest` — centraliza a URL base utilizada pelos testes JUnit.
-* `TestDataFactory` — gera dados dinâmicos para os usuários.
-* `UserData` — representa os dados de um usuário.
-* `ApiLogFilter` — fornece logging HTTP e mascara o token JWT quando a propriedade `authorization` aparece na resposta.
-
-### `runners`
-
-* `CucumberTest` — configura a execução dos cenários Cucumber através do JUnit Platform.
-
-### `steps`
-
-* `UsuarioSteps` — implementa os passos dos cenários definidos em `usuarios.feature`.
-* `Hooks` — executa ações antes e depois de cada cenário Cucumber e registra o status do cenário no console.
-
----
-
-## Pré-requisitos
-
-Para executar o projeto localmente:
-
-* JDK 21;
-* Maven 3.9 ou superior;
-* Git;
-* acesso à internet para comunicação com a API ServeRest.
-
-O Jenkins é utilizado para execução do pipeline de CI e requer a configuração das ferramentas utilizadas pelo `Jenkinsfile`.
-
----
-
-## Configuração
-
-Não é necessário configurar banco de dados localmente.
-
-Os testes utilizam diretamente a API:
-
-```text
-https://serverest.dev
-```
-
-Os dados de usuários são gerados dinamicamente durante os testes.
-
-A `TestDataFactory` utiliza UUID para gerar e-mails diferentes entre as execuções, reduzindo conflitos com registros existentes na API.
-
----
-
-## Executando os testes
-
-Clone o repositório:
-
-```bash
-git clone https://github.com/marcoslfreire/api-automation.git
-```
-
-Acesse o diretório:
-
-```bash
-cd api-automation
-```
-
-Execute a suíte completa:
-
-```bash
-mvn clean test
-```
-
-O Maven compila o projeto e executa os testes JUnit e os cenários Cucumber configurados na suíte.
-
-Os resultados utilizados pelo Allure são configurados em:
-
-```text
-target/allure-results
-```
-
----
-
-## Executando um teste específico
-
-É possível executar uma classe JUnit específica:
-
-```bash
-mvn test -Dtest=JwtAuthenticationTest
-```
-
-Também é possível executar um método específico:
-
-```bash
-mvn test -Dtest=JwtAuthenticationTest#deveUtilizarJwtEmOperacaoProtegida
-```
-
----
-
-## Allure Report
-
-O projeto utiliza Allure para geração dos resultados e visualização dos testes.
-
-O arquivo:
-
-```text
-src/test/resources/allure.properties
-```
-
-define:
-
-```properties
-allure.results.directory=target/allure-results
-```
-
-Portanto, os resultados são gerados em:
-
-```text
-target/allure-results
-```
-
-### Gerando o relatório localmente
-
-Com os resultados disponíveis, o relatório pode ser gerado utilizando:
-
-```bash
-mvn allure:report
-```
-
-O relatório gerado pelo plugin Maven fica em:
-
-```text
-target/site/allure-maven-plugin
-```
-
-O projeto também possui configuração para publicação do relatório durante a execução do pipeline Jenkins.
-
----
-
-## Autenticação JWT
-
-O projeto possui uma classe específica para validar o fluxo de autenticação JWT:
-
-```text
-JwtAuthenticationTest.java
-```
-
-O fluxo validado é:
-
-```text
-Criação de usuário administrador
-        ↓
-POST /login
-        ↓
-Obtenção do JWT
-        ↓
-POST /produtos com Authorization
-        ↓
-GET /produtos/{id}
-        ↓
-Validação dos dados do produto
-```
-
-O token recebido no login é validado quanto à existência e ao formato:
-
-```text
-Bearer <JWT>
-```
-
-Em seguida, o token é utilizado no header:
-
-```text
-Authorization: Bearer <JWT>
-```
-
-para executar uma operação protegida.
-
-O teste também valida os dados retornados pelo produto criado.
-
-### Proteção de logs
-
-O projeto possui um `ApiLogFilter` preparado para mascarar tokens JWT exibidos nos logs:
-
-```text
-"authorization": "Bearer ***"
-```
-
-O token real continua sendo utilizado internamente pela requisição.
-
-O filtro está implementado no projeto, mas sua ativação está atualmente comentada nos pontos em que ele foi preparado.
 
 ---
 
 ## Cenários automatizados
 
-A suíte atual possui:
+A suíte possui 21 cenários funcionais.
 
-* **20 testes JUnit**
-* **14 cenários Cucumber**
-* **34 execuções automatizadas na suíte**
+### Usuários
 
-Os 14 cenários Cucumber representam fluxos funcionais que também possuem cobertura correspondente nos testes JUnit. Portanto, os 34 testes/cenários representam **execuções automatizadas**, e não 34 comportamentos funcionais distintos.
+| ID     | Cenário                                     |
+| ------ | ------------------------------------------- |
+| CT-001 | Criar usuário com dados válidos             |
+| CT-002 | Buscar usuário por e-mail                   |
+| CT-003 | Buscar usuário inexistente                  |
+| CT-004 | Atualizar usuário existente                 |
+| CT-005 | Atualizar utilizando ID inexistente         |
+| CT-006 | Excluir usuário existente                   |
+| CT-007 | Excluir usuário inexistente                 |
+| CT-008 | Impedir cadastro com e-mail inválido        |
+| CT-009 | Impedir cadastro com e-mail duplicado       |
+| CT-010 | Impedir cadastro sem nome                   |
+| CT-011 | Impedir cadastro sem e-mail                 |
+| CT-012 | Impedir cadastro sem password               |
+| CT-013 | Impedir cadastro sem administrador          |
+| CT-014 | Impedir cadastro com administrador inválido |
+| CT-021 | Listar usuários cadastrados                 |
 
-### Autenticação
+### Autenticação e autorização
 
-* Login com credenciais válidas;
-* Login com senha incorreta.
-
-### Criação e validação de usuários
-
-* Cadastro de usuário com sucesso;
-* Cadastro com e-mail inválido;
-* Cadastro com e-mail duplicado;
-* Cadastro sem nome;
-* Cadastro sem e-mail;
-* Cadastro sem password;
-* Cadastro sem administrador;
-* Cadastro com administrador inválido.
-
-### Consulta de usuários
-
-* Listagem de usuários;
-* Busca de usuário por e-mail;
-* Busca de usuário por ID inexistente;
-* Consulta do usuário criado pelo ID.
-
-### Atualização
-
-* Atualização de usuário existente;
-* Atualização utilizando ID inexistente, validando o comportamento da API de criação de um novo usuário.
-
-### Exclusão
-
-* Exclusão de usuário existente;
-* Validação de que o usuário excluído não é mais encontrado;
-* Exclusão de usuário inexistente.
-
-### JWT e operação protegida
-
-* Criação de usuário administrador;
-* Autenticação através de `/login`;
-* Validação do recebimento do JWT;
-* Utilização do JWT em endpoint protegido;
-* Criação de produto autenticado;
-* Consulta do produto criado;
-* Validação dos dados retornados.
+| ID     | Cenário                                                         |
+| ------ | --------------------------------------------------------------- |
+| CT-015 | Realizar login com credenciais válidas                          |
+| CT-016 | Rejeitar login com senha inválida                               |
+| CT-017 | Permitir operação protegida com JWT válido                      |
+| CT-018 | Rejeitar operação protegida sem JWT                             |
+| CT-019 | Rejeitar operação protegida com JWT inválido                    |
+| CT-020 | Rejeitar operação administrativa para usuário não administrador |
 
 ---
 
-## Cucumber / BDD
+## Estratégia de testes
 
-Os principais fluxos de gerenciamento de usuários também estão descritos em Gherkin no arquivo:
+Os cenários foram organizados de forma que cada execução tenha sua própria preparação de dados.
 
-```text
-src/test/resources/features/usuarios.feature
+A automação evita depender de dados fixos previamente existentes na API sempre que o cenário exige um usuário específico.
+
+Por exemplo, um cenário que precisa de um usuário cadastrado cria sua própria massa antes da execução.
+
+Isso reduz a dependência entre cenários e facilita a execução isolada.
+
+---
+
+## BDD com Cucumber
+
+O Cucumber é utilizado como camada de especificação funcional.
+
+Exemplo:
+
+```gherkin
+Scenario: Criar usuário com dados válidos
+  Given que possuo os dados válidos de um novo usuário
+  When realizo o cadastro do usuário
+  Then o usuário deve ser criado com sucesso
+  And o identificador do usuário deve ser retornado
+  And os dados do usuário criado devem ser persistidos
 ```
 
-O arquivo possui **14 cenários** envolvendo:
+A intenção é manter o cenário orientado ao comportamento esperado, evitando colocar detalhes de implementação HTTP diretamente no Gherkin.
 
-* criação;
-* consulta;
-* atualização;
-* exclusão;
-* validações de cadastro.
+---
 
-O runner:
+## JUnit Platform
+
+O projeto utiliza o **JUnit Platform** como mecanismo de execução do Cucumber.
+
+O runner principal é:
 
 ```text
-src/test/java/br/com/qaautomation/teste/runners/CucumberTest.java
+CucumberTest.java
 ```
 
-utiliza o **JUnit Platform** para executar os cenários Cucumber.
+O runner seleciona os recursos Cucumber e configura o pacote responsável pelos Step Definitions.
 
-Os steps estão implementados em:
+Os testes funcionais atuais são executados pela engine do Cucumber.
+
+---
+
+## Testes legados
+
+Durante a evolução do projeto, existiam testes funcionais implementados diretamente com JUnit.
+
+Esses testes foram preservados em:
 
 ```text
-src/test/java/br/com/qaautomation/teste/steps/UsuarioSteps.java
+src/test/java/br/com/qaautomation/teste/legacy/
+```
+
+Eles permanecem no projeto como referência histórica e técnica da evolução da automação.
+
+A execução principal da V3 utiliza os cenários Cucumber.
+
+Os testes legados não são executados pelo fluxo principal do Maven, evitando duplicidade de execução dos mesmos comportamentos.
+
+---
+
+## Configuração do ambiente
+
+### Pré-requisitos
+
+Instalar:
+
+* Java 21;
+* Maven;
+* Git.
+
+Verificar as versões:
+
+```bash
+java -version
+mvn -version
+git --version
 ```
 
 ---
 
-## Jenkins
+## Clonar o projeto
 
-O projeto possui um `Jenkinsfile` para execução da suíte em pipeline.
-
-A configuração atual utiliza as ferramentas `Maven3` e `Allure` previamente configuradas no Jenkins:
-
-```groovy
-tools {
-    maven 'Maven3'
-    allure 'Allure'
-}
+```bash
+git clone https://github.com/marcoslfreire/api-automation.git
 ```
 
-### Pipeline atual
+Entrar no projeto:
 
-O pipeline possui duas etapas principais:
+```bash
+cd api-automation
+```
+
+---
+
+## Configuração da URL da API
+
+A URL padrão utilizada pelo projeto é:
 
 ```text
-Testes
-   ↓
-mvn clean test
-   ↓
-Relatório Allure
-   ↓
-target/allure-results
+https://serverest.dev
 ```
 
-### Execução dos testes
+A configuração está centralizada em:
 
-O Jenkins executa:
+```text
+ApiConfig.java
+```
+
+O projeto também permite sobrescrever a URL através da propriedade:
+
+```text
+baseUrl
+```
+
+Exemplo:
+
+```bash
+mvn clean test -DbaseUrl=https://serverest.dev
+```
+
+Quando nenhuma propriedade é informada, o projeto utiliza a URL padrão.
+
+---
+
+## Executar os testes
+
+Para executar a suíte completa:
 
 ```bash
 mvn clean test
 ```
 
-Após a execução, o estágio de relatório utiliza:
+A execução atual possui:
+
+```text
+Tests run: 21
+Failures: 0
+Errors: 0
+Skipped: 0
+BUILD SUCCESS
+```
+
+---
+
+## Relatórios Allure
+
+Durante a execução são gerados resultados do Allure em:
 
 ```text
 target/allure-results
 ```
 
-como origem dos resultados para publicação do relatório Allure.
+Esses arquivos contêm os dados utilizados para geração do relatório.
 
-### Observação sobre a configuração do Jenkins
+Para gerar/visualizar o relatório localmente, utilizando a instalação do Allure CLI:
 
-O `Jenkinsfile` depende das ferramentas `Maven3` e `Allure` configuradas no ambiente Jenkins.
-
-Portanto, para executar a pipeline em uma nova instalação do Jenkins, essas ferramentas precisam estar disponíveis e configuradas no servidor/agente utilizado pelo job.
-
-A pipeline atual utiliza:
-
-```groovy
-bat 'mvn clean test'
+```bash
+allure serve target/allure-results
 ```
 
-e, portanto, está configurada para execução em um ambiente Windows.
+O relatório permite analisar os resultados dos cenários executados e seus respectivos detalhes.
 
 ---
 
-## Resultado da execução
+## Integração com Jenkins
 
-A suíte completa foi executada localmente utilizando:
+O projeto possui um `Jenkinsfile` na raiz do repositório.
 
-```bash
-mvn clean test
-```
-
-A execução foi concluída com sucesso:
+Pipeline atual:
 
 ```text
-Tests run: 34
+Jenkins
+   ↓
+Maven
+   ↓
+mvn clean test
+   ↓
+Cucumber
+   ↓
+21 cenários
+   ↓
+Surefire
+   ↓
+Allure Results
+   ↓
+Relatórios
+```
+
+O pipeline utiliza as ferramentas configuradas no Jenkins para:
+
+* executar os testes;
+* publicar os resultados JUnit/Surefire;
+* disponibilizar os resultados do Allure.
+
+O `Jenkinsfile` também possui configuração para executar as etapas de publicação no bloco `post`, permitindo que os resultados sejam processados após a execução da suíte.
+
+---
+
+## Autenticação e autorização
+
+A API utiliza autenticação baseada em JWT.
+
+Os testes validam diferentes situações:
+
+### Login válido
+
+Verifica:
+
+* credenciais válidas;
+* status HTTP `200`;
+* retorno do token JWT.
+
+### Login inválido
+
+Verifica a rejeição de credenciais inválidas.
+
+### JWT válido
+
+Verifica o acesso a uma operação protegida utilizando um token válido.
+
+### JWT ausente
+
+Verifica a rejeição de uma operação protegida quando o token não é enviado.
+
+### JWT inválido
+
+Verifica a rejeição de um token inválido.
+
+### Usuário sem permissão administrativa
+
+Verifica a restrição de uma operação administrativa para um usuário autenticado sem perfil de administrador.
+
+---
+
+## Validações de dados
+
+A suíte também cobre regras de validação do cadastro de usuários.
+
+Entre elas:
+
+* e-mail inválido;
+* e-mail duplicado;
+* nome obrigatório;
+* e-mail obrigatório;
+* password obrigatório;
+* administrador obrigatório;
+* administrador limitado aos valores esperados pela API.
+
+Os testes validam tanto o status HTTP quanto as mensagens retornadas pela API quando aplicável.
+
+---
+
+## Observação sobre atualização de usuário
+
+A API ServeRest possui um comportamento específico para `PUT /usuarios/{id}`.
+
+Quando o ID informado não existe, a API pode realizar o cadastro de um novo usuário.
+
+Esse comportamento é validado especificamente pelo cenário:
+
+```text
+CT-005
+```
+
+O cenário foi mantido separado do fluxo de atualização de um usuário existente para representar os dois comportamentos observados na API.
+
+---
+
+## Rate Limit
+
+Durante a exploração da API foi realizada uma validação do comportamento de limite de requisições.
+
+Foram executadas requisições sequenciais para verificar se a API retornaria um status de rate limit, como `429`, ou headers relacionados ao controle de requisições.
+
+Na execução realizada, as requisições não apresentaram resposta `429` nem headers específicos de rate limit.
+
+Por esse motivo, o rate limit não foi transformado em um cenário automatizado da suíte atual.
+
+A validação permanece como uma investigação exploratória realizada durante o desenvolvimento do projeto.
+
+---
+
+## Decisões técnicas
+
+### Cucumber como camada funcional
+
+A V3 utiliza Cucumber para representar os comportamentos funcionais da API.
+
+Isso permite separar:
+
+```text
+Especificação
+    ↓
+Implementação
+```
+
+Os arquivos `.feature` representam o comportamento esperado, enquanto os Step Definitions implementam a execução.
+
+### JUnit como engine de execução
+
+O JUnit Platform é utilizado como infraestrutura de execução do Cucumber.
+
+A intenção não é manter uma duplicação de testes funcionais entre JUnit e Cucumber.
+
+### Separação dos API Clients
+
+As chamadas HTTP são centralizadas em classes específicas, como:
+
+```text
+UsuarioApi
+```
+
+Isso evita espalhar detalhes de comunicação HTTP pelos Step Definitions.
+
+### ScenarioContext
+
+O `ScenarioContext` permite compartilhar dados entre os passos de um mesmo cenário sem utilizar estado global.
+
+### Dados independentes
+
+Sempre que necessário, os cenários criam seus próprios dados para reduzir dependências entre execuções.
+
+---
+
+## Resultado atual
+
+Última execução validada:
+
+```text
+Tests run: 21
 Failures: 0
 Errors: 0
 Skipped: 0
@@ -463,123 +546,57 @@ Skipped: 0
 BUILD SUCCESS
 ```
 
-Resultado da execução validada:
-
-```text
-34/34 execuções automatizadas concluídas com sucesso
-```
+Todos os 21 cenários funcionais da suíte Cucumber foram executados com sucesso.
 
 ---
 
-## Cobertura funcional
-
-A suíte atual cobre os principais comportamentos implementados no escopo do projeto, incluindo:
-
-* criação de usuários;
-* consulta de usuários;
-* atualização de usuários;
-* exclusão de usuários;
-* validações de dados obrigatórios;
-* validações de formato;
-* validação de e-mail duplicado;
-* login;
-* tratamento de credenciais inválidas;
-* autenticação JWT;
-* utilização de JWT em operação protegida;
-* validação das respostas HTTP;
-* validação das mensagens retornadas;
-* validação dos dados dos recursos;
-* validação das pós-condições das operações.
-
-A cobertura apresentada neste README representa os cenários efetivamente automatizados no projeto. Ela não deve ser interpretada como uma afirmação de cobertura de 100% de todas as possibilidades da API ou de todos os requisitos externos não automatizados.
-
----
-
-## CI
-
-O projeto utiliza Jenkins para execução contínua da suíte de testes.
-
-O fluxo atual é:
+## Fluxo completo da solução
 
 ```text
-Código-fonte
-     ↓
-Jenkins
-     ↓
-Maven
-     ↓
-mvn clean test
-     ↓
-Testes JUnit + Cucumber
-     ↓
-target/allure-results
-     ↓
-Relatório Allure
+                  GitHub
+                     │
+                     ▼
+                  Jenkins
+                     │
+                     ▼
+               Maven / Surefire
+                     │
+                     ▼
+                Cucumber
+                     │
+             ┌───────┴───────┐
+             ▼               ▼
+        Usuários        Autenticação
+             │               │
+             └───────┬───────┘
+                     ▼
+                Rest Assured
+                     │
+                     ▼
+                 ServeRest
+                     │
+             ┌───────┴────────┐
+             ▼                ▼
+          Surefire       Allure Results
+                              │
+                              ▼
+                         Allure Report
 ```
-
-O pipeline disponibiliza o relatório Allure associado à execução do job.
 
 ---
 
 ## Repositório
 
-O código-fonte do projeto está disponível no GitHub:
+GitHub:
 
 https://github.com/marcoslfreire/api-automation
 
 ---
 
-## Observações técnicas
+## Autor
 
-### Dados dinâmicos
+**Marcos Luciano Freire**
 
-Os testes utilizam dados dinâmicos para reduzir conflitos entre execuções.
+QA Automation / Software Engineer
 
-Os e-mails utilizados nos cadastros são gerados através de identificadores únicos.
-
-### Validação das respostas
-
-As validações não se limitam ao código HTTP. Os testes também verificam, conforme o cenário:
-
-* mensagens retornadas pela API;
-* identificadores gerados;
-* atributos dos usuários;
-* quantidade de registros;
-* dados dos produtos;
-* comportamento após atualização;
-* comportamento após exclusão;
-* token de autenticação;
-* mensagens de validação.
-
-### Organização
-
-A solução separa:
-
-* dados de teste;
-* configuração básica;
-* testes JUnit;
-* cenários BDD;
-* steps Cucumber;
-* hooks;
-* configuração do relatório;
-* pipeline Jenkins.
-
-Essa organização permite manter os testes funcionais separados dos componentes de suporte e da configuração de execução.
-
----
-
-## Conclusão
-
-O projeto implementa uma suíte de automação de testes de API utilizando **Java, Rest Assured, JUnit 5 e Cucumber**, com geração de resultados através do **Allure** e execução integrada ao **Jenkins**.
-
-A execução local validada da suíte apresentou:
-
-```text
-34 execuções
-0 falhas
-0 erros
-0 testes ignorados
-BUILD SUCCESS
-```
-
-O projeto foi estruturado para demonstrar automação de APIs REST, validação funcional e negativa, autenticação JWT, BDD, geração de evidências de execução através do Allure e integração com uma pipeline de CI.
+GitHub: https://github.com/marcoslfreire

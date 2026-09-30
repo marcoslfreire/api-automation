@@ -1,4 +1,4 @@
-package br.com.qaautomation.teste;
+package br.com.qaautomation.teste.legacy;
 
 import br.com.qaautomation.teste.api.AutenticacaoApi;
 import br.com.qaautomation.teste.api.UsuarioApi;

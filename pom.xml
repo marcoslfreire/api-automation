@@ -13,15 +13,14 @@
                 <version>2.17.0</version>
             </plugin>
 
-            <!-- Permite que o Allure intercepte métodos anotados com @Step -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <argLine>
-                        -javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar
-                    </argLine>
+                    <includes>
+                        <include>**/CucumberTest.java</include>
+                    </includes>
                 </configuration>
             </plugin>
 
@@ -101,6 +100,13 @@
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit-platform-engine</artifactId>
+            <version>7.28.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-picocontainer</artifactId>
             <version>7.28.2</version>
             <scope>test</scope>
         </dependency>
